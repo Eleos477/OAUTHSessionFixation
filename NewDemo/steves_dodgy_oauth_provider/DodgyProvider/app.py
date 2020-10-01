@@ -224,6 +224,16 @@ def authorize():
         token = request.form.get('oauth_token')
         foundT = TemporaryCredential.query.filter_by(oauth_token=token).first()
         granted = request.form.get('confirm')
+        username = request.form.get('username')
+        if username is not None:
+            user = User.query.filter_by(username=username).first()
+            if not user:
+                user = User(username=username)
+                db.session.add(user)
+                db.session.commit()
+            print("User id : " + str(user.id))
+            session['id'] = user.id
+            session['isAuth'] = None
         if granted == "yes":
             print('granted!')
             grant_user = user # user session will be stored

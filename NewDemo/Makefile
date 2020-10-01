@@ -20,8 +20,9 @@ slow:
 # Do not need to rebuild container if using this
 # Everytime change code just stop current docker and run this again	
 run:
-	docker run -v "$(PWD)/steves_dodgy_oauth_provider/DodgyProvider/:/vulnerable_oauthapp/Provider/" --network host -p 0.0.0.0:8001:8001/tcp -d --name $(PROV) --rm $(PROV)
-	docker run -v "$(PWD)/OauthDemo/:/vulnerable_oauthapp/OauthDemo/" --network host -p 0.0.0.0:$(HOST_PORT):$(APP_PORT)/tcp -it --name $(APP) --rm $(APP) sh
+	
+	docker run -v "$(PWD)/OauthDemo/:/vulnerable_oauthapp/OauthDemo/" --network host -p 0.0.0.0:$(HOST_PORT):$(APP_PORT)/tcp -d --name $(APP) --rm $(APP)
+	docker run -v "$(PWD)/steves_dodgy_oauth_provider/DodgyProvider/:/vulnerable_oauthapp/Provider/" --network host -p 0.0.0.0:8001:8001/tcp -it --name $(PROV) --rm $(PROV) sh
 	
 	
 
@@ -30,8 +31,8 @@ start:
 	docker run -p 0.0.0.0:$(HOST_PORT):$(APP_PORT)/tcp -it --rm $(APP)
 
 stop:
-	docker stop $(PROV)
-	#docker stop $(APP)
+	#docker stop $(PROV)
+	docker stop $(APP)
 	
 clean:
 	docker image rm $(APP)
