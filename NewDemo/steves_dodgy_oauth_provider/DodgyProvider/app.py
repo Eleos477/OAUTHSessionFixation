@@ -182,7 +182,6 @@ def home():
 
 @app.route('/initiate', methods=['POST'])
 def initiate_temporary_credential():
-    # poop = create_temporary_credential(request)
     cl = Client.query.get(0)
     if cl is None:
         cl = Client(
