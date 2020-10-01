@@ -9,7 +9,7 @@ from flask import render_template, redirect
 from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 import re
-import datetime
+import time
 
 
 from authlib.integrations.flask_client import OAuth, OAuthError
@@ -109,18 +109,27 @@ class TokenCredential(db.Model, OAuth1TokenCredentialMixin):
     def get_user_id(self):
         return self.user_id
 
-class UsedToken(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoIncrement=True)
+class TimestampNonce(db.Model, OAuth1TimestampNonceMixin):
+    id = db.Column(db.Integer, primary_key=True)
+
+#
+# Patch Code
+#
+class ExpiredToken(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
     oauth_token = db.Column(db.String(55), index=True)
 
+    expiry = db.Column(db.Integer)
+
     def get_oauth_token(self):
         return self.oauth_token
+    
+    def get_expiry(self):
+        return self.expiry
 
-
-
-class TimestampNonce(db.Model, OAuth1TimestampNonceMixin):
-    id = db.Column(db.Integer, primary_key=True)
+    def set_expiry(self, time):
+        self.expiry = time
 
 query_client = create_query_client_func(db.session, Client)
 server = AuthorizationServer(app, query_client=query_client)
@@ -209,6 +218,30 @@ def authorize():
     daToken = authUrl[authUrl.find(start) + len(start) : authUrl.find(end)]
     print(daToken)
     userID = 0
+
+    millisec = int(time.time() * 1000)
+
+    
+    ###########
+    # patch
+    isUsed = ExpiredToken.query.filter_by(oauth_token=daToken).first()
+
+    print(isUsed)
+
+    if isUsed is None:
+        isUsed= ExpiredToken( 
+            expiry=millisec,
+            oauth_token=daToken
+        )
+        db.session.add(isUsed)
+        db.session.commit()
+    else:
+        print(millisec)
+        print(isUsed.expiry)
+        print(millisec - isUsed.expiry)
+        if int(millisec - isUsed.expiry) <= 1147345:
+            return render_template('expired.html')
+    ####
     if request.method == 'GET':
         foundT = TemporaryCredential.query.filter_by(oauth_token=daToken).first()
         usr = {'resource_owner_key': str(foundT.get_oauth_token()), 'id': foundT.get_user_id()}
@@ -230,6 +263,9 @@ def authorize():
             except OAuth1Error as error:
                 return render_template('error.html', error=error)
     elif request.method == 'POST':
+        # patch
+        if (millisec - isUsed.expiry) <= 1147345:
+            return render_template('expired.html')
         token = request.form.get('oauth_token')
         foundT = TemporaryCredential.query.filter_by(oauth_token=token).first()
         granted = request.form.get('confirm')
