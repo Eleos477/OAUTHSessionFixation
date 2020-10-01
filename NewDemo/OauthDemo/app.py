@@ -58,10 +58,10 @@ oauth.register(
 def index():
     print("ENTERED INDEX PAGE")
     
-    if 'ACCOUNT_NUM' in session: # If user session exists
-        user = model.findUser(session['ACCOUNT_NUM']) # Get the user by customer number
+    if model.validateSession(session): # If user session exists
+        user = model.findUser(model.sessions[session['SESSION_ID']].accountNum) # Get the user by customer number
 
-        print(f"DEBUG: Index - user session is {session['ACCOUNT_NUM']}")
+        print(f"DEBUG: Index - user session is {session['SESSION_ID']}")
         print(f"Initiated index for user '{user.accountNum}'")
 
         return render_template('index.html', name=(user.name + ' ' + user.surname), number=user.accountNum, balance=user.account.balance)
@@ -137,10 +137,9 @@ def authorize():
     profile = resp.json()
 
     # print(repr(profile)) #for debugging
-    newUser = User(profile['name'], '', "twitter")
+    newUser = User(model.generateAccountNum(), profile['name'], '', "twitter")
 
     model.addRegisteredUser(newUser)
-        
     model.saveRegisteredUsers(model.REGISTERED_USERS_SAVEFILE)
         
     #print(profile)

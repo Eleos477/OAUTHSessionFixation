@@ -5,11 +5,11 @@ from random import seed
 from random import randint
 
 class User():
-    def __init__(self, name, surname, password):
+    def __init__(self, accountNum, name, surname, password):
         self.name = name
         self.surname = surname
         self.password = password
-        self.accountNum = randint(1, 9999) # For convenience
+        self.accountNum = accountNum # For convenience
         self.account = Account(self.accountNum)
 
     def deposit(self, deposit):

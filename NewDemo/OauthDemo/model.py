@@ -62,6 +62,13 @@ def findUser(accountNum):
     
     return None
 
+def generateAccountNum(min=1000, max=9999):
+    """Generates a random account number that does not match that of any other registered user."""
+    accountNum = random.randint(min, max)
+    while accountNum in [user.accountNum for user in registeredUsers]:
+        accountNum = random.randint(min, max)
+    
+    return accountNum
 
 ################
 ### SESSIONS ###
