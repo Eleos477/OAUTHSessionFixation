@@ -9,7 +9,7 @@ from flask import render_template, redirect
 from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 import re
-import calendar
+import datetime
 
 
 from authlib.integrations.flask_client import OAuth, OAuthError
@@ -113,8 +113,6 @@ class UsedToken(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoIncrement=True)
 
     oauth_token = db.Column(db.String(55), index=True)
-
-    expire = db.Column(db.Integer)
 
     def get_oauth_token(self):
         return self.oauth_token
