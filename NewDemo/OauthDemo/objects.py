@@ -26,19 +26,17 @@ class User():
 
         if (deposit > 0):
             self.account.balance += deposit
-            model.saveRegisteredUsers(model.REGISTERED_USERS_SAVEFILE)
         # else:
-            #TODO flash/error
+            #TODO flash/error FIXME actually throw an exception because we're all software engineers here
 
     def withdraw(self, withdrawal):
         if (withdrawal > 0):
             if (self.account.balance - withdrawal >= 0):
                 self.account.balance -= withdrawal
-                model.saveRegisteredUsers(model.REGISTERED_USERS_SAVEFILE)
             # else:
-                #TODO flash/error
+                #TODO flash/error FIXME actually throw an exception because we're all software engineers here
         # else:
-            #TODO flash/error
+            #TODO flash/error FIXME actually throw an exception because we're all software engineers here
 
 
     #FIXME never used
@@ -77,8 +75,7 @@ class User():
 
 class Account():
     def __init__(self, accountNum):
-        self.accountNum = accountNum #randint(10000,20000) # FIXME replaced account number with account number, hope this is ok
-        # self.accountNum = accountNum
+        self.accountNum = accountNum
         self.balance = 1000000
 
 class Session():

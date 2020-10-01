@@ -4,6 +4,7 @@ import os
 import string
 import random
 from objects import Session
+from app import app
 
 ########################
 ### Registered Users ###
@@ -11,13 +12,12 @@ from objects import Session
 registeredUsers = []
 # TODO REPLACE THE LIST OF USERS WITH A DICTIONARY BECAUSE THAT MAKES WAY MORE SENSE
 
-REGISTERED_USERS_SAVEFILE = 'OAUTHUsers.pickle'
-
 def addRegisteredUser(user):
     """Adds the imported user to the list of users"""
     registeredUsers.append(user)
 
-def loadRegisteredUsers(filepath):
+def loadRegisteredUsers():
+    filepath = app.config["REGISTERED_USERS_SAVE"]
     if os.path.isfile(filepath) and os.stat(filepath).st_size != 0:
         loadfile = open(filepath, 'rb')
 
@@ -29,8 +29,8 @@ def loadRegisteredUsers(filepath):
         print("Here's all the registered user we just loaded")
         [print(user.accountNum) for user in registeredUsers] #TODO get rid of this
 
-def saveRegisteredUsers(filepath):
-    saveFile = open(filepath, 'wb')
+def saveRegisteredUsers():
+    saveFile = open(app.config["REGISTERED_USERS_SAVE"], 'wb')
     pickle.dump(registeredUsers, saveFile)
     saveFile.close()
 
@@ -120,3 +120,15 @@ def validateSession(session):
 def invalidateSession(sessionID):
     """Invalidates the session object with the imported session ID. Does NOT remove the actual session."""
     sessions.pop(sessionID)
+
+
+###########################
+### METHODS FOR TESTING ###
+###########################
+
+def reinitialise():
+    """Renitialises the global state (useful for testing)"""
+    global registeredUsers, sessions
+
+    registeredUsers = []
+    sessions = {}

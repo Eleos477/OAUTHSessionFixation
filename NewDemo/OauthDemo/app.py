@@ -9,11 +9,30 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from wtforms import Form, BooleanField, StringField, PasswordField, validators, IntegerField
 # from form import LoginForm
 
-#App creation
-app = Flask(__name__)
-app.secret_key = '!secret'
-app.config.from_object('config')
 
+##############################################
+### INITIALISE GLOBAL APPLICATION VARIABLE ###
+##############################################
+app = None
+
+def initialiseApp(test_config=None):
+    """Initialises the application with a given configuration (useful for testing)."""
+    global app
+    
+    #App creation
+    app = Flask(__name__)
+    app.secret_key = '!secret'
+
+    if test_config is None:
+        app.config.from_object('config')
+    else: # If test configuration imported, use this special configuration
+        app.config.update(test_config)
+
+    return app
+
+app = initialiseApp()
+
+## Remaining imports
 #Package for registration page
 # import OAUTH.registration
 import registration
@@ -24,7 +43,6 @@ from banking import *
 from objects import *
 
 import model
-
 
 ############################
 ## INTERNAL DOCUMENTATION ##
@@ -37,7 +55,7 @@ import model
 ## RUNTIME STARTS HERE ##
 #########################
 #Check for existing data & load - can use as standin for database - use code from old demo
-model.loadRegisteredUsers(model.REGISTERED_USERS_SAVEFILE)
+model.loadRegisteredUsers()
 print("LOADED ALL REGISTERED USERS - here they are:")
 [print(user.accountNum) for user in model.registeredUsers] #TODO get rid of this
 
@@ -140,7 +158,7 @@ def authorize():
     newUser = User(model.generateAccountNum(), profile['name'], '', "twitter")
 
     model.addRegisteredUser(newUser)
-    model.saveRegisteredUsers(model.REGISTERED_USERS_SAVEFILE)
+    model.saveRegisteredUsers()
         
     #print(profile)
     # can store to db or whatever                                       # Lol Moritz
@@ -150,11 +168,13 @@ def authorize():
     
     accountNum=newUser.accountNum
 
-    if not 'ACCOUNT_NUM' in session:
+    if not 'ACCOUNT_NUM' in session: #FIXME old functionality, need to upgrade
         session['ACCOUNT_NUM'] = accountNum
     
     return redirect('/')
 
+def test():
+    print("TEST")
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

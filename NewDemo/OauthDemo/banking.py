@@ -21,8 +21,9 @@ def banking():
                 user.deposit(transaction.amount.data)
             elif transaction.withdraw.data == True:
                 user.withdraw(transaction.amount.data)
+            model.saveRegisteredUsers()
 
-        print(f"DEBUG: Banking - user session is {session['ACCOUNT_NUM']}")
+        print(f"DEBUG: Banking - user session is {session['SESSION_ID']}")
         print(f"Initiated banking for user '{user.accountNum}'")
 
         return render_template('banking.html', name=(user.name), balance=user.account.balance, form=transaction)

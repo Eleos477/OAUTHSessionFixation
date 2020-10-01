@@ -9,3 +9,4 @@ gunicorn
 flask-bootstrap
 requests
 Authlib
+pytest
