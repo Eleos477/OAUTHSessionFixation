@@ -103,20 +103,6 @@ def createSession(user):
 
     return newSession
 
-# things = {} TODO remove this junk
-
-# def createSessionTEST():
-#     """Create a session object for the imported user. Returns the session ID of the created session. 
-#         ACTUAL SESSION MANAGEMENT IS NOT THE RESPONSIBILITY OF THIS METHOD."""
-
-#     # Generate a random session ID
-#     randomID = get_random_string(8)
-#     while randomID in sessions:
-#         randomID = get_random_string(8)
-    
-#     things[randomID] = "YEET"
-
-
 def validateSession(session):
     print("In validate session - here's all the sessions:")
     print(sessions)
