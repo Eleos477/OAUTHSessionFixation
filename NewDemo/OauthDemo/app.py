@@ -209,7 +209,7 @@ def steverAuthorized():
     print(r.text)
 
     # print(repr(profile)) #for debugging
-    newUser = User(54321, r.text, '', "steve")
+    newUser = User(model.generateAccountNum(), r.text, '', "steve")
 
     model.addRegisteredUser(newUser)
         

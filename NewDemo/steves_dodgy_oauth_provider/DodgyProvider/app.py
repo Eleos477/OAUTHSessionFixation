@@ -145,8 +145,8 @@ def currently_authorized():
 @app.route('/', methods=('GET', 'POST'))
 def home():
     session.permanent = True
-    if current_user():
-        return redirect('http://127.0.0.1:5000/steveLogin')
+    # if current_user():
+    #     return redirect('http://127.0.0.1:5000/steveLogin')
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -179,14 +179,14 @@ def initiate_temporary_credential():
     request.client_id= 1
     request.redirect_uri='http://127.0.0.1:5000/steveAuthorized'
     temp = server.create_temporary_credential(request)
-    #print("Hey client " + repr(cl.client_key))
-    # return temp.get_oauth_token()#server.create_temporary_credentials_response()
-    # return server.create_temporary_credentials_response()
+
     return jsonify(
         oauth_token=temp.get_oauth_token(),# note a new token is generated on each request
         oauth_token_secret=temp.get_oauth_token_secret(),
     )
-
+#
+#  patch via session management
+#
 @app.route('/authorize', methods=['GET', 'POST'])
 def authorize():
     user = current_user()
@@ -205,10 +205,16 @@ def authorize():
         usr = {'resource_owner_key': str(foundT.get_oauth_token()), 'id': foundT.get_user_id()}
         userID = foundT.get_user_id()
         grant_user = User.query.get(foundT.get_user_id())
-        #print("before updated id " + str(foundT.get_user_id()))
-        if user is None and foundT.get_user_id() is None:
-            return render_template('reauthorize.html', user=user, token=daToken)
-            
+        
+        # THis is the patch code, users must have an established session otherwise redo the whole auth flow
+        # we must also check if a another user is occupying the token as part of their session to prevent others from using it
+        if user is None:
+            return redirect('/')
+        elif foundT.get_user_id() is not None and foundT.get_user_id() != user.id:
+            return redirect('/')
+        #   
+        ##
+
         if foundT.get_user_id() is None and currently_authorized() is None:
             usr = {'resource_owner_key': str(foundT.get_oauth_token()), 'id': user.get_user_id() }
             userID = user.get_user_id()
@@ -224,16 +230,6 @@ def authorize():
         token = request.form.get('oauth_token')
         foundT = TemporaryCredential.query.filter_by(oauth_token=token).first()
         granted = request.form.get('confirm')
-        username = request.form.get('username')
-        if username is not None:
-            user = User.query.filter_by(username=username).first()
-            if not user:
-                user = User(username=username)
-                db.session.add(user)
-                db.session.commit()
-            print("User id : " + str(user.id))
-            session['id'] = user.id
-            session['isAuth'] = None
         if granted == "yes":
             print('granted!')
             grant_user = user # user session will be stored
@@ -244,7 +240,7 @@ def authorize():
             #print(user.id)
         else:
             grant_user = None
-
+    #print("My name is " + user.username)
     try:
         #server.create_authorization_verifier(request)
         return server.create_authorization_response(grant_user=grant_user)
