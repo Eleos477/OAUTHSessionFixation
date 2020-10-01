@@ -144,7 +144,7 @@ def currently_authorized():
 
 @app.route('/', methods=('GET', 'POST'))
 def home():
-    session.permanent = True
+    #session.permanent = True
     if current_user():
         return redirect('http://127.0.0.1:5000/steveLogin')
 
@@ -191,7 +191,7 @@ def initiate_temporary_credential():
 def authorize():
     user = current_user()
     grant_user = None
-    session.permanent = True
+    #session.permanent = True
 
     print("My request " + repr(request.url))
     authUrl = request.url
@@ -207,13 +207,13 @@ def authorize():
         grant_user = User.query.get(foundT.get_user_id())
         #print("before updated id " + str(foundT.get_user_id()))
         if user is None and foundT.get_user_id() is None:
-            return redirect('/')
+            return render_template('reauthorize.html', user=user, token=daToken)
             
         if foundT.get_user_id() is None and currently_authorized() is None:
             usr = {'resource_owner_key': str(foundT.get_oauth_token()), 'id': user.get_user_id() }
             userID = user.get_user_id()
             grant_user = User.query.get(foundT.get_user_id())
-            # session['id'] = user.id
+            session['id'] = user.id
         
             try:
                 req = server.check_authorization_request()
@@ -224,6 +224,16 @@ def authorize():
         token = request.form.get('oauth_token')
         foundT = TemporaryCredential.query.filter_by(oauth_token=token).first()
         granted = request.form.get('confirm')
+        username = request.form.get('username')
+        if username is not None:
+            user = User.query.filter_by(username=username).first()
+            if not user:
+                user = User(username=username)
+                db.session.add(user)
+                db.session.commit()
+            print("User id : " + str(user.id))
+            session['id'] = user.id
+            session['isAuth'] = None
         if granted == "yes":
             print('granted!')
             grant_user = user # user session will be stored
@@ -234,7 +244,7 @@ def authorize():
             #print(user.id)
         else:
             grant_user = None
-
+    print("Hi my names is " + user.username)
     try:
         #server.create_authorization_verifier(request)
         return server.create_authorization_response(grant_user=grant_user)
@@ -245,6 +255,7 @@ def authorize():
 def getUser():
     #print(repr(request.args))
     temp = TemporaryCredential.query.filter_by(oauth_token=request.args['token']).first()
+    print("Hi my names is " + str(User.query.get(temp.get_user_id()).username))
     return str(User.query.get(temp.get_user_id()).username)
 
 with app.app_context():
