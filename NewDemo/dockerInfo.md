@@ -6,6 +6,8 @@ Follow steps:
     2. Run " make run " to run the container
     3. If you change code, just exit the docker and run " make run " again
        no need rebuild.
+    
+    NOTE: one docker container is daemon and you need to run " make stop " to stop it.
        
        
        
