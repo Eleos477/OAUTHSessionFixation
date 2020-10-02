@@ -6,3 +6,5 @@ __pycache__/
 NewDemo/OauthDemo/__pycache__/
 NewDemo/OauthDemo/OauthDemo.egg-info
 NewDemo/OauthDemo/OAUTHUsers.pickle
+NewDemo/OauthDemo/sessions.pickle
+NewDemo/OauthDemo/OAUTHUsers.pickle

@@ -14,24 +14,28 @@ from wtforms import Form, BooleanField, StringField, PasswordField, validators, 
 ##############################################
 ### INITIALISE GLOBAL APPLICATION VARIABLE ###
 ##############################################
-app = None
+# app = None
+app = Flask(__name__)
+app.secret_key = '!secret'
+app.config.from_object('config')
 
-def initialiseApp(test_config=None):
-    """Initialises the application with a given configuration (useful for testing)."""
-    global app
+
+# def initialiseApp(test_config=None):
+#     """Initialises the application with a given configuration (useful for testing)."""
+#     global app
     
-    #App creation
-    app = Flask(__name__)
-    app.secret_key = '!secret'
+#     #App creation
+#     app = Flask(__name__)
+#     app.secret_key = '!secret'
 
-    if test_config is None:
-        app.config.from_object('config')
-    else: # If test configuration imported, use this special configuration
-        app.config.update(test_config)
+#     if test_config is None:
+#         app.config.from_object('config')
+#     else: # If test configuration imported, use this special configuration
+#         app.config.update(test_config)
 
-    return app
+#     return app
 
-app = initialiseApp()
+# app = initialiseApp()
 
 ## Remaining imports
 #Package for registration page
@@ -61,33 +65,12 @@ print("LOADED ALL REGISTERED USERS - here they are:")
 [print(user.accountNum) for user in model.registeredUsers] #TODO get rid of this
 
 
-from authlib.integrations.flask_client import OAuth
-oauth = OAuth(app)
-oauth.register(
-    name='twitter',
-    api_base_url='https://api.twitter.com/1.1/',
-    request_token_url='https://api.twitter.com/oauth/request_token',
-    access_token_url='https://api.twitter.com/oauth/access_token',
-    authorize_url='https://api.twitter.com/oauth/authenticate',
-    fetch_token=lambda: session.get('token'),  # DON'T DO IT IN PRODUCTION
-)
-
-oauth.register(
-    'steve',
-    client_id='nUf0hXbeiEn4mOE1HH8fiua7lcpCPET2Nn2hhZKB',
-    client_secret='ZKXDSaewa29o26YwidwnoOfwlBqH6tnkNh5nkmBAgOcxJ2kGeU',
-    api_base_url='http://127.0.0.1:8001/',
-    request_token_url='http://127.0.0.1:8001/initiate',
-    access_token_url='http://127.0.0.1:8001/token',
-    authorize_url='http://127.0.0.1:8001/authorize',
-    fetch_token=lambda: session.get('token'),  # DON'T DO IT IN PRODUCTION
-)
-
 #Default page
 @app.route('/', methods=["GET","POST"])
 def index():
     print("ENTERED INDEX PAGE")
     
+    model.manageSession(session, request.args.get('session'))
     if model.validateSession(session): # If user session exists
         user = model.findUser(model.sessions[session['SESSION_ID']].accountNum) # Get the user by customer number
 
@@ -103,6 +86,7 @@ def index():
 def login():
     #Create login form, both fields are mandatory -- user input fields are not centred for some reason
     # print(repr(login.accountNum))
+    model.manageSession(session, request.args.get('session'))
     if not model.validateSession(session): # If customer not already logged in
         login = LoginForm(request.form)
 
@@ -119,17 +103,9 @@ def login():
             if (user is not None):
                 # Debug print
                 print(f"Login for {login.accountNum.data} accepted!", file=sys.stdout)
-                print("Creating new session for user")
 
                 # Create a session object for this new session (which is now stored in the dict of session objects)
-                newSessionObj = model.createSession(user)
-
-                # print(f"JUST CREATED SESSION {}: {}")
-                print(model.sessions)
-                # Linking new session object with the user's actual session
-                session['SESSION_ID'] = newSessionObj.ID
-
-                print(model.sessions)
+                model.createUserSession(session, user)
 
                 #On successful login, will redirect to that user's profile
                 return redirect('/')
@@ -142,101 +118,14 @@ def login():
 @app.route('/logout', methods=["GET", "POST"])
 def logout():
     """Logs out a user from the application by removing their session and invalidating their session ID."""
+    model.manageSession(session, request.args.get('session'))
     if (model.validateSession(session)):
         print("Logging out a user...")
-        # Remove the session object from the list of permitted sessions
-        model.invalidateSession(session['SESSION_ID'])
         
-        # Invalidate the current session
+        # Clear the current session
         session.clear()
 
     return redirect('/')
 
-
-@app.route('/twitterLogin')
-def twitterLogin():
-    twitter = oauth.create_client("twitter")
-    redirect_uri = url_for('authorize', _external=True)
-    return twitter.authorize_redirect(redirect_uri)
-
-@app.route('/authorize')
-def authorize():
-    twitter = oauth.create_client("twitter")
-    token = twitter.authorize_access_token()
-    resp = twitter.get('account/verify_credentials.json')
-    profile = resp.json()
-
-    # print(repr(profile)) #for debugging
-    newUser = User(model.generateAccountNum(), profile['name'], '', "twitter")
-
-    model.addRegisteredUser(newUser)
-    model.saveRegisteredUsers()
-    
-    newSessionObj = model.createSession(newUser)
-
-    # print(f"JUST CREATED SESSION {}: {}")
-    print(model.sessions)
-    # Linking new session object with the user's actual session
-    session['SESSION_ID'] = newSessionObj.ID
-        
-    #print(profile)
-    # can store to db or whatever                                       # Lol Moritz
-    # return redirect(url_for('banking', user=str(profile['name']))) TODO replace with this (sorry Kei i'm lazy)
-    # return redirect(url_for('banking', name=str(profile['name']).user))
-    # return redirect(url_for('register_complete', accountNum=newUser.accountNum))
-    
-    accountNum=newUser.accountNum
-
-    if not 'ACCOUNT_NUM' in session: #FIXME old functionality, need to upgrade
-        session['ACCOUNT_NUM'] = accountNum
-    
-    return redirect('/')
-    
-@app.route('/steveLogin')
-def steveLogin():
-    custom = oauth.create_client("steve")
-    redirect_uri = url_for('authorize', _external=True)
-    return custom.authorize_redirect(redirect_uri)
-
-@app.route('/steveAuthorized')
-def steverAuthorized():
-    print("Hey")
-    #custom = oauth.create_client("steve")
-    session['token'] = request.args['oauth_token']
-    print(repr(session['token']))
-    params = {'token': session['token']}
-    r = requests.get('http://127.0.0.1:8001/user', params=params)
-    print(r.text)
-
-    # print(repr(profile)) #for debugging
-    newUser = User(model.generateAccountNum(), r.text, '', "steve")
-
-    model.addRegisteredUser(newUser)
-        
-    model.saveRegisteredUsers()
-
-    newSessionObj = model.createSession(newUser)
-
-    # print(f"JUST CREATED SESSION {}: {}")
-    print(model.sessions)
-    # Linking new session object with the user's actual session
-    session['SESSION_ID'] = newSessionObj.ID
-        
-    #print(profile)
-    # can store to db or whatever                                       # Lol Moritz
-    # return redirect(url_for('banking', user=str(profile['name']))) TODO replace with this (sorry Kei i'm lazy)
-    # return redirect(url_for('banking', name=str(profile['name']).user))
-    # return redirect(url_for('register_complete', accountNum=newUser.accountNum))
-    
-    accountNum=newUser.accountNum
-
-    if not 'ACCOUNT_NUM' in session:
-        session['ACCOUNT_NUM'] = accountNum
-    
-    return redirect('/')
-
-def test():
-    print("TEST")
-
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)

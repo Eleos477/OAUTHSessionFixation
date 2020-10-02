@@ -11,6 +11,7 @@ from objects import TransactionForm
 @app.route('/banking', methods=["GET","POST"])
 def banking():
     print("ENTERED BANKING")
+    model.manageSession(session, request.args.get('session'))
     
     if model.validateSession(session): # If user session exists
         user = model.findUser(model.sessions[session['SESSION_ID']].accountNum) # Get the user by customer number

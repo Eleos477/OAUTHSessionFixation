@@ -85,41 +85,82 @@ def get_random_string(length):
     print("Random string is:", result_str)
     return result_str
 
-def createSession(user):
-    """Create a session object for the imported user. Returns the session ID of the created session. 
-        ACTUAL SESSION MANAGEMENT IS NOT THE RESPONSIBILITY OF THIS METHOD."""
-
+def generateSessionID():
     # Generate a random session ID
     randomID = get_random_string(8)
     while randomID in sessions:
         randomID = get_random_string(8)
-        print(sessions)
 
-    print(f"Creating new session with ID {randomID} and user account Num {user.accountNum}")
+    return randomID
 
-    # Create the new session and add it to the session dict
-    newSession = Session(randomID, user.accountNum)
-    sessions[randomID] = newSession
+def createUserSession(session, user):
+    """Associates the imported session with the imported user."""
+    global sessions
+    if not session["SESSION_ID"] in sessions:
+        raise ValueError("Session does not exist!")
+    
+    print(f"Creating user session between ID {session['SESSION_ID']} and user {user.accountNum}")
 
-    return newSession
+    sessions[session["SESSION_ID"]].accountNum = user.accountNum
 
-def validateSession(session):
-    print("In validate session - here's all the sessions:")
-    print(sessions)
+    saveSessions()
+
+def manageSession(session, urlSessionID):
+    """Manages the session process - if the imported session has not been given an id (and no ID is provided in the url), then it is provided one.
+        If the session ID given is not yet in the list of active sessions, it is added. This method is insecure by design."""
+    loadSessions()
+    
+    print("In manage session - here's all the sessions:")
     for s in sessions:
         sessionObj = sessions[s]
         print(f"{sessionObj.ID}: {sessionObj.accountNum}")
     
-    """Checks whether the imported session has a session object and whether that session object is still validated (i.e. in the dict of session objects)"""
-    if "SESSION_ID" in session:
-        if session["SESSION_ID"] in sessions:
-            return True
-    
-    return False
+    # Make URL session ID override the existing session
+    if urlSessionID is not None: # If the url specifies a session ID
+        print("ENTERED URL SESSION ID")
+        session["SESSION_ID"] = urlSessionID
+    else:
+        if session.get("SESSION_ID") is None: # If there is no session ID in the url or cookie
+            # Generate a random new Session ID
+            session["SESSION_ID"] = generateSessionID()
+        else:
+            print(f"Session ID WAS in session, was {session['SESSION_ID']}") #TODO remove me
+    print(f"Managing session, new session ID is {session['SESSION_ID']}")
 
-def invalidateSession(sessionID):
-    """Invalidates the session object with the imported session ID. Does NOT remove the actual session."""
-    sessions.pop(sessionID)
+    # Now that we assure the user has a session ID, add it to the list of sessions if not already there.
+    if session["SESSION_ID"] not in sessions:
+        sessions[session["SESSION_ID"]] = Session(session["SESSION_ID"], None)
+    
+    saveSessions()
+
+def validateSession(session):
+    """Validates if the imported session is associated with a user."""
+    loadSessions()
+
+    if not session["SESSION_ID"] in sessions:
+        raise ValueError("Session does not exist!")
+    
+    # Check if session ID has an associated account that is logged in
+    if sessions[session["SESSION_ID"]].accountNum is not None:
+        return True
+    else:
+        return False
+
+def loadSessions():
+    filepath = app.config["SESSIONS_SAVE"]
+    if os.path.isfile(filepath) and os.stat(filepath).st_size != 0:
+        loadfile = open(filepath, 'rb')
+
+        global sessions
+        sessions = pickle.load(loadfile)
+
+        loadfile.close()
+
+def saveSessions():
+    saveFile = open(app.config["SESSIONS_SAVE"], 'wb')
+    pickle.dump(sessions, saveFile)
+    saveFile.close()
+
 
 
 ###########################
