@@ -1,4 +1,4 @@
-from app import app
+import app
 import model
 import objects
 import registration
