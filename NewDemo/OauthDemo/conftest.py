@@ -5,7 +5,8 @@ import tempfile
 
 import pytest
 
-from OauthDemo import app, model
+import app
+import model
 
 @pytest.fixture
 def app():

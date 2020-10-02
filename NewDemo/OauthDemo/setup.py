@@ -1,5 +1,6 @@
-import io
+# TODO Probably remove this
 
+import io
 from setuptools import find_packages
 from setuptools import setup
 

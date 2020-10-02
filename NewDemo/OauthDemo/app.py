@@ -57,9 +57,6 @@ import model
 #########################
 #Check for existing data & load - can use as standin for database - use code from old demo
 model.loadRegisteredUsers()
-print("LOADED ALL REGISTERED USERS - here they are:")
-[print(user.accountNum) for user in model.registeredUsers] #TODO get rid of this
-
 
 from authlib.integrations.flask_client import OAuth
 oauth = OAuth(app)
@@ -69,7 +66,7 @@ oauth.register(
     request_token_url='https://api.twitter.com/oauth/request_token',
     access_token_url='https://api.twitter.com/oauth/access_token',
     authorize_url='https://api.twitter.com/oauth/authenticate',
-    fetch_token=lambda: session.get('token'),  # DON'T DO IT IN PRODUCTION
+    fetch_token=lambda: session.get('token'),  # FIXME DON'T DO IT IN PRODUCTION
 )
 
 oauth.register(
@@ -80,7 +77,7 @@ oauth.register(
     request_token_url='http://127.0.0.1:8001/initiate',
     access_token_url='http://127.0.0.1:8001/token',
     authorize_url='http://127.0.0.1:8001/authorize',
-    fetch_token=lambda: session.get('token'),  # DON'T DO IT IN PRODUCTION
+    fetch_token=lambda: session.get('token'),  # FIXME DON'T DO IT IN PRODUCTION
 )
 
 #Default page

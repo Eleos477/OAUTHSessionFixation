@@ -1,12 +1,6 @@
 from random import seed
 from random import randint
 
-# class sessionID(): # TODO pretty sure this can be removed
-#     def __init__(self, ID):
-#         self.ID = ID
-#         self.auth = False
-#         self.authCustomerNum = None
-
 class user():
     def __init__(self, name, surname, password, registeredAccounts):
         self.name = name
