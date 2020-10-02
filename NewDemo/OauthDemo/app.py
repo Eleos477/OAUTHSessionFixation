@@ -15,27 +15,22 @@ from wtforms import Form, BooleanField, StringField, PasswordField, validators, 
 ### INITIALISE GLOBAL APPLICATION VARIABLE ###
 ##############################################
 # app = None
-app = Flask(__name__)
-app.secret_key = '!secret'
-app.config.from_object('config')
-
-
-# def initialiseApp(test_config=None):
-#     """Initialises the application with a given configuration (useful for testing)."""
-#     global app
+def initialiseApp(test_config=None):
+    """Initialises the application with a given configuration (useful for testing)."""
+    global app
     
-#     #App creation
-#     app = Flask(__name__)
-#     app.secret_key = '!secret'
+    #App creation
+    app = Flask(__name__)
+    app.secret_key = '!secret'
 
-#     if test_config is None:
-#         app.config.from_object('config')
-#     else: # If test configuration imported, use this special configuration
-#         app.config.update(test_config)
+    if test_config is None:
+        app.config.from_object('config')
+    else: # If test configuration imported, use this special configuration
+        app.config.update(test_config)
 
-#     return app
+    return app
 
-# app = initialiseApp()
+app = initialiseApp()
 
 ## Remaining imports
 #Package for registration page
@@ -62,19 +57,16 @@ import model
 #Check for existing data & load - can use as standin for database - use code from old demo
 model.loadRegisteredUsers()
 print("LOADED ALL REGISTERED USERS - here they are:")
-[print(user.accountNum) for user in model.registeredUsers] #TODO get rid of this
+[print(user.accountNum) for user in model.registeredUsers]
 
 
 #Default page
 @app.route('/', methods=["GET","POST"])
 def index():
-    print("ENTERED INDEX PAGE")
-    
     model.manageSession(session, request.args.get('session'))
     if model.validateSession(session): # If user session exists
         user = model.findUser(model.sessions[session['SESSION_ID']].accountNum) # Get the user by customer number
 
-        print(f"DEBUG: Index - user session is {session['SESSION_ID']}")
         print(f"Initiated index for user '{user.accountNum}'")
 
         return render_template('index.html', name=(user.name + ' ' + user.surname), number=user.accountNum, balance=user.account.balance)
@@ -84,8 +76,7 @@ def index():
 
 @app.route('/login', methods=["GET","POST"])
 def login():
-    #Create login form, both fields are mandatory -- user input fields are not centred for some reason
-    # print(repr(login.accountNum))
+    # Create login form, both fields are mandatory -- user input fields are not centred for some reason
     model.manageSession(session, request.args.get('session'))
     if not model.validateSession(session): # If customer not already logged in
         login = LoginForm(request.form)
@@ -96,8 +87,6 @@ def login():
 
             # Try to find a user with input username & password
             user = model.validateUser(int(login.accountNum.data), login.password.data)
-
-            print(f"DEBUG: Tried to get user and got {user}", file=sys.stdout)
 
             # If a user with the given username and password was found
             if (user is not None):
