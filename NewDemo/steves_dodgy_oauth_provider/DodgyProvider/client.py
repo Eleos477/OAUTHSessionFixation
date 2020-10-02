@@ -17,7 +17,6 @@ app.secret_key = '!secret'
 
 from authlib.integrations.flask_client import OAuth
 
-# TODO: fill them
 CLIENT_KEY = 'nUf0hXbeiEn4mOE1HH8fiua7lcpCPET2Nn2hhZKB'
 CLIENT_SECRET = 'ZKXDSaewa29o26YwidwnoOfwlBqH6tnkNh5nkmBAgOcxJ2kGeU'
 

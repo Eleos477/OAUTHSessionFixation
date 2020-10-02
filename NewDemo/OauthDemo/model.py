@@ -10,11 +10,14 @@ from app import app
 ### Registered Users ###
 ########################
 registeredUsers = []
-# TODO REPLACE THE LIST OF USERS WITH A DICTIONARY BECAUSE THAT MAKES WAY MORE SENSE
 
 def addRegisteredUser(user):
     """Adds the imported user to the list of users"""
     registeredUsers.append(user)
+
+    print("Just added a registered user: Here's all the users")
+    [print(user.accountNum) for user in registeredUsers]
+
 
 def loadRegisteredUsers():
     filepath = app.config["REGISTERED_USERS_SAVE"]
@@ -26,9 +29,6 @@ def loadRegisteredUsers():
 
         loadfile.close()
 
-        print("Here's all the registered user we just loaded")
-        [print(user.accountNum) for user in registeredUsers] #TODO get rid of this
-
 def saveRegisteredUsers():
     saveFile = open(app.config["REGISTERED_USERS_SAVE"], 'wb')
     pickle.dump(registeredUsers, saveFile)
@@ -38,9 +38,6 @@ def validateUser(accountNum, password):
     """Checks if the imported customer and password match a user of the website. 
     If so, returns the relevant user object. Returns 'None' otherwise."""
     
-    print("DEBUG: Here's all the users")
-    [print(user.accountNum) for user in registeredUsers] #TODO get rid of this
-
     foundUser = None
 
     for user in registeredUsers:
@@ -51,10 +48,6 @@ def validateUser(accountNum, password):
     return foundUser
 
 def findUser(accountNum):
-    print(f"DEBUG: Searching for account {accountNum}")
-    print("DEBUG: Here's all the users")
-    [print(user.accountNum) for user in registeredUsers] #TODO get rid of this
-
     for user in registeredUsers:
         if user.accountNum == accountNum:
             print("User found!")

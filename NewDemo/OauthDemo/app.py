@@ -57,9 +57,6 @@ import model
 #########################
 #Check for existing data & load - can use as standin for database - use code from old demo
 model.loadRegisteredUsers()
-print("LOADED ALL REGISTERED USERS - here they are:")
-[print(user.accountNum) for user in model.registeredUsers] #TODO get rid of this
-
 
 from authlib.integrations.flask_client import OAuth
 oauth = OAuth(app)
@@ -179,15 +176,9 @@ def authorize():
     # Linking new session object with the user's actual session
     session['SESSION_ID'] = newSessionObj.ID
         
-    #print(profile)
-    # can store to db or whatever                                       # Lol Moritz
-    # return redirect(url_for('banking', user=str(profile['name']))) TODO replace with this (sorry Kei i'm lazy)
-    # return redirect(url_for('banking', name=str(profile['name']).user))
-    # return redirect(url_for('register_complete', accountNum=newUser.accountNum))
-    
     accountNum=newUser.accountNum
 
-    if not 'ACCOUNT_NUM' in session: #FIXME old functionality, need to upgrade
+    if not 'ACCOUNT_NUM' in session:
         session['ACCOUNT_NUM'] = accountNum
     
     return redirect('/')
@@ -208,7 +199,6 @@ def steverAuthorized():
     r = requests.get('http://127.0.0.1:8001/user', params=params)
     print(r.text)
 
-    # print(repr(profile)) #for debugging
     newUser = User(54321, r.text, '', "steve")
 
     model.addRegisteredUser(newUser)
@@ -217,17 +207,11 @@ def steverAuthorized():
 
     newSessionObj = model.createSession(newUser)
 
-    # print(f"JUST CREATED SESSION {}: {}")
     print(model.sessions)
+    
     # Linking new session object with the user's actual session
     session['SESSION_ID'] = newSessionObj.ID
         
-    #print(profile)
-    # can store to db or whatever                                       # Lol Moritz
-    # return redirect(url_for('banking', user=str(profile['name']))) TODO replace with this (sorry Kei i'm lazy)
-    # return redirect(url_for('banking', name=str(profile['name']).user))
-    # return redirect(url_for('register_complete', accountNum=newUser.accountNum))
-    
     accountNum=newUser.accountNum
 
     if not 'ACCOUNT_NUM' in session:
