@@ -1,9 +1,3 @@
-import app
-import model
-import objects
-import registration
-import banking
-
 import requests
 from urllib import parse
 
